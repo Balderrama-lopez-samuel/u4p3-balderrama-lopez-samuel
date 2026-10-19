@@ -32,9 +32,10 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 # CSRF_TRUSTED_ORIGINS: dominios con https:// desde los que se aceptan formularios POST (en Render evita el 403 CSRF)
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
 
-# LOGIN_URL: a dónde manda @login_required si no hay sesión (temporal, hasta el login propio de la Semana 6)
-LOGIN_URL = '/admin/login/'
-
+# LOGIN_URL: a dónde manda @login_required si no hay sesión (nuestro login propio de la Semana 6)
+LOGIN_URL = 'login'
+# LOGIN_REDIRECT_URL: a dónde ir después de iniciar sesión
+LOGIN_REDIRECT_URL = 'servicios'
 
 # Application definition
 

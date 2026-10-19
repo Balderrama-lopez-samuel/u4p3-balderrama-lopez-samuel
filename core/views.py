@@ -3,6 +3,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 # login_required: decorador que exige sesión iniciada, si no manda a LOGIN_URL
 from django.contrib.auth.decorators import login_required
+# messages: mensajes "flash" que se muestran una sola vez en la siguiente página
+from django.contrib import messages
+# login/logout: abren y cierran la sesión del usuario
+from django.contrib.auth import login, logout
+# UserCreationForm/AuthenticationForm: formularios de registro y login que Django ya trae
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 # connection: objeto de Django que expone la configuración de la base de datos activa
 from django.db import connection
 from .models import Servicio
@@ -21,9 +27,10 @@ def inicio(request):
     return render(request, 'core/inicio.html', contexto)
 
 # servicios: el listado (la "R" de CRUD)
+@login_required
 def servicios(request):
-    # Servicio.objects.all(): trae todos los registros de la tabla core_servicio en MySQL
-    lista_servicios = Servicio.objects.all()
+    # filter(propietario=request.user): solo los servicios del usuario logueado
+    lista_servicios = Servicio.objects.filter(propietario=request.user)
     # se la pasamos a la plantilla con la clave 'servicios'
     return render(request, 'core/servicios.html', {'servicios': lista_servicios})
 
@@ -52,8 +59,8 @@ def crear_servicio(request):
 # editar_servicio: la "U" de CRUD · pk: el id que llega desde la URL
 @login_required
 def editar_servicio(request, pk):
-    # get_object_or_404: si no existe un Servicio con ese pk, responde 404 en vez de error 500
-    servicio = get_object_or_404(Servicio, pk=pk)
+    # dos condiciones: el id Y que el dueño sea el usuario actual; si es ajeno → 404
+    servicio = get_object_or_404(Servicio, pk=pk, propietario=request.user)
     if request.method == 'POST':
         # instance=servicio: actualiza ese registro en vez de crear uno nuevo
         form = ServicioForm(request.POST, instance=servicio)
@@ -69,10 +76,46 @@ def editar_servicio(request, pk):
 # eliminar_servicio: la "D" de CRUD
 @login_required
 def eliminar_servicio(request, pk):
-    servicio = get_object_or_404(Servicio, pk=pk)
+    # mismo filtro que en editar: solo el dueño puede borrar su servicio
+    servicio = get_object_or_404(Servicio, pk=pk, propietario=request.user)
     # solo se borra con POST (al confirmar), nunca con solo abrir el enlace
     if request.method == 'POST':
         servicio.delete()
         return redirect('servicios')
     # GET: muestra la página de confirmación
     return render(request, 'core/servicio_confirm_delete.html', {'servicio': servicio})
+
+# registro: crea un usuario nuevo (la contraseña se guarda con hash, no en texto plano)
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            usuario = form.save()
+            # login: deja al usuario con sesión iniciada justo después de registrarse
+            login(request, usuario)
+            messages.success(request, f'Cuenta creada. Bienvenido, {usuario.username}.')
+            return redirect('servicios')
+    else:
+        form = UserCreationForm()
+    return render(request, 'core/registro.html', {'form': form})
+
+# iniciar_sesion: valida usuario y contraseña con AuthenticationForm
+def iniciar_sesion(request):
+    if request.method == 'POST':
+        # AuthenticationForm recibe request como primer argumento y los datos en data=
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            # get_user(): el usuario que ya pasó la validación
+            login(request, form.get_user())
+            messages.success(request, 'Sesión iniciada.')
+            return redirect('servicios')
+    else:
+        form = AuthenticationForm(request)
+    return render(request, 'core/login.html', {'form': form})
+
+# cerrar_sesion: solo con POST, para que un simple enlace no te saque de la sesión
+def cerrar_sesion(request):
+    if request.method == 'POST':
+        logout(request)
+        messages.info(request, 'Cerraste sesión correctamente.')
+    return redirect('login')

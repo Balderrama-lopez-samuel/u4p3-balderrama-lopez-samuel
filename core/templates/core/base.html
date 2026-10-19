@@ -24,6 +24,29 @@
 </head>
 <body class="bg-slate-50 text-slate-800">
   <main class="max-w-3xl mx-auto py-10 px-6">
+    {# barra de sesión: cambia según si hay usuario logueado o no #}
+    <nav class="flex justify-between items-center mb-6 text-sm">
+      <a href="{% url 'servicios' %}" class="font-semibold">Servicios</a>
+      {# user.is_authenticated: False cuando request.user es AnonymousUser #}
+      {% if user.is_authenticated %}
+        {# logout por POST: un simple enlace no debe poder cerrar la sesión #}
+        <form method="post" action="{% url 'logout' %}" class="flex items-center gap-3">
+          {% csrf_token %}
+          <span>Hola, {{ user.username }}</span>
+          <button type="submit" class="text-red-600 hover:underline">Cerrar sesión</button>
+        </form>
+      {% else %}
+        <div class="space-x-3">
+          <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Entrar</a>
+          <a href="{% url 'registro' %}" class="text-blue-600 hover:underline">Registrarse</a>
+        </div>
+      {% endif %}
+    </nav>
+
+    {# messages: los avisos flash, se muestran una vez y desaparecen #}
+    {% for message in messages %}
+      <div class="mb-4 px-4 py-2 rounded bg-green-100 text-green-800">{{ message }}</div>
+    {% endfor %}
     {# block content: aquí cada plantilla hija mete su contenido #}
     {% block content %}{% endblock %}
   </main>

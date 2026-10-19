@@ -13,4 +13,8 @@ urlpatterns = [
     # <int:pk>: captura un número de la URL y se lo pasa a la vista como pk
     path('servicios/<int:pk>/editar/', views.editar_servicio, name='editar_servicio'),
     path('servicios/<int:pk>/eliminar/', views.eliminar_servicio, name='eliminar_servicio'),
+    # rutas de autenticación (Semana 6)
+    path('registro/', views.registro, name='registro'),
+    path('login/', views.iniciar_sesion, name='login'),
+    path('logout/', views.cerrar_sesion, name='logout'),
 ]

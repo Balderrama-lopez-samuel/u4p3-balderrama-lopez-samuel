@@ -1,0 +1,16 @@
+{# extends: hereda el diseño de base.html #}
+{% extends 'core/base.html' %}
+
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-6">Iniciar sesión</h1>
+  <form method="post" class="bg-white border border-slate-200 rounded-lg p-6">
+    {# csrf_token: protege el formulario contra envíos falsificados desde otro sitio #}
+    {% csrf_token %}
+    {# form.as_p: pinta usuario y contraseña, y los errores si los datos no coinciden #}
+    {{ form.as_p }}
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">Entrar</button>
+  </form>
+  <p class="mt-4 text-sm">¿No tienes cuenta? <a href="{% url 'registro' %}" class="text-blue-600 hover:underline">Regístrate</a></p>
+{% endblock %}
