@@ -9,11 +9,31 @@ Pantallas propias para crear, listar, editar y eliminar servicios sin entrar a `
 - Plantillas `base.html`, `servicio_form.html` (crear y editar) y `servicio_confirm_delete.html` (confirmación antes de borrar).
 - Mientras llega el login propio (Semana 6), el inicio de sesión usa `/admin/login/`.
 
-## Producción
-https://u3s5-balderrama-lopez-samuel.onrender.com
+## Semana 6 (Unidad 3): registro, login y aislamiento de datos
+- Registro con `UserCreationForm`, inicio de sesión con `AuthenticationForm` y cierre de sesión solo por POST.
+- Cada usuario ve, edita y elimina únicamente sus propios servicios (`filter(propietario=request.user)` y `get_object_or_404(..., propietario=request.user)`).
 
-- Servicios: https://u3s5-balderrama-lopez-samuel.onrender.com/servicios/
-- Panel de administración: https://u3s5-balderrama-lopez-samuel.onrender.com/admin/
+## Semana 7 (Unidad 4): pulido funcional y UX
+- **Paginación:** `/servicios/` muestra 5 servicios por página con `Paginator` y `get_page()`, que además evita errores con páginas inválidas (`?page=99`, `?page=abc`).
+- **Búsqueda:** formulario GET que filtra por título con `titulo__icontains` (sin distinguir mayúsculas); los controles Anterior/Siguiente conservan el parámetro `q`.
+- **Estado vacío:** `{% empty %}` muestra un mensaje distinto si el usuario aún no tiene servicios o si la búsqueda no encontró resultados.
+- **Accesibilidad y responsividad:** `label` y `aria-label` en el buscador y en los enlaces Editar/Eliminar, `nav` con `aria-label` en la paginación, botones de al menos 44 px de alto y tabla dentro de `overflow-x-auto` para pantallas angostas.
+- Sin cambios en el modelo, por lo que no se generaron migraciones nuevas.
+
+### Pruebas en producción
+| Prueba | Resultado |
+|---|---|
+| 9 servicios: página 1 con 5 y página 2 con 4 | ✅ |
+| Búsqueda `clases` / `CLASES` → 3 resultados | ✅ |
+| Búsqueda `zzzz` → mensaje "No se encontraron servicios" | ✅ |
+| `?page=99` → última página, `?page=abc` → página 1 | ✅ |
+| Otro usuario no ve los servicios ajenos y recibe 404 al abrir `/servicios/<pk>/editar/` de otro | ✅ |
+
+## Producción
+https://u4s7-balderrama-lopez-samuel.onrender.com
+
+- Servicios: https://u4s7-balderrama-lopez-samuel.onrender.com/servicios/
+- Panel de administración: https://u4s7-balderrama-lopez-samuel.onrender.com/admin/
 
 ## Rutas
 | URL | Vista | name |
@@ -23,6 +43,9 @@ https://u3s5-balderrama-lopez-samuel.onrender.com
 | `/servicios/nuevo/` | `crear_servicio` | `crear_servicio` |
 | `/servicios/<pk>/editar/` | `editar_servicio` | `editar_servicio` |
 | `/servicios/<pk>/eliminar/` | `eliminar_servicio` | `eliminar_servicio` |
+| `/registro/` | `registro` | `registro` |
+| `/login/` | `iniciar_sesion` | `login` |
+| `/logout/` | `cerrar_sesion` | `logout` |
 
 ## Cómo correrlo localmente
 1. Crear y activar un entorno virtual
@@ -35,7 +58,7 @@ https://u3s5-balderrama-lopez-samuel.onrender.com
 ## Despliegue en Render
 - **Build Command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
 - **Start Command:** `gunicorn miproyecto.wsgi`
-- **Variables de entorno:** `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS=u3s5-balderrama-lopez-samuel.onrender.com`, `CSRF_TRUSTED_ORIGINS=https://u3s5-balderrama-lopez-samuel.onrender.com`
+- **Variables de entorno:** `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS=u4s7-balderrama-lopez-samuel.onrender.com`, `CSRF_TRUSTED_ORIGINS=https://u4s7-balderrama-lopez-samuel.onrender.com`
 
 ## Evidencia
 - Semana 3 (Django + MySQL en Aiven): capturas de `migrate`, tablas en Aiven y vistas locales en la carpeta [/evidencia](evidencia).
