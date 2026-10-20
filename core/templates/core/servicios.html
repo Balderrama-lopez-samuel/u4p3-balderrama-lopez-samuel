@@ -4,41 +4,81 @@
 {% block title %}Servicios{% endblock %}
 
 {% block content %}
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
     <h1 class="text-2xl font-bold">Servicios</h1>
     {# url 'crear_servicio': arma la URL a partir del name= de la ruta, sin escribirla a mano #}
-    <a href="{% url 'crear_servicio' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">+ Nuevo servicio</a>
+    <a href="{% url 'crear_servicio' %}" class="inline-flex items-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">+ Nuevo servicio</a>
   </div>
 
-  <table class="w-full bg-white border border-slate-200 rounded-lg overflow-hidden">
-    <thead class="bg-slate-100">
-      <tr>
-        <th class="text-left px-4 py-2">Servicio</th>
-        <th class="text-left px-4 py-2">Categoría</th>
-        <th class="text-left px-4 py-2">Precio</th>
-        <th class="text-left px-4 py-2">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {# for: repite este <tr> una vez por cada servicio guardado en MySQL #}
-      {# ojo: comentarios de Django y no de HTML, porque Django sí ejecuta las etiquetas dentro de los de HTML #}
-      {% for servicio in servicios %}
-      <tr class="border-t border-slate-200">
-        <td class="px-4 py-2">{{ servicio.titulo }}</td>
-        <td class="px-4 py-2">{{ servicio.categoria }}</td>
-        <td class="px-4 py-2">${{ servicio.precio }}</td>
-        <td class="px-4 py-2 space-x-3">
-          {# servicio.pk: la llave primaria, rellena el <int:pk> de la ruta #}
-          <a href="{% url 'editar_servicio' servicio.pk %}" class="text-blue-600 hover:underline">Editar</a>
-          <a href="{% url 'eliminar_servicio' servicio.pk %}" class="text-red-600 hover:underline">Eliminar</a>
-        </td>
-      </tr>
-      {# empty: se muestra solo cuando la lista no tiene ningún servicio #}
-      {% empty %}
-      <tr>
-        <td colspan="4" class="px-4 py-6 text-center text-slate-500">Todavía no hay servicios. Crea el primero con "+ Nuevo servicio".</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  {# method="get": la búsqueda viaja en la URL (?q=...), así se puede compartir o recargar #}
+  <form method="get" action="{% url 'servicios' %}" role="search" class="flex flex-wrap gap-2 mb-4">
+    <label for="q" class="sr-only">Buscar servicio por título</label>
+    <input type="search" id="q" name="q" value="{{ q }}" placeholder="Buscar por título..."
+           aria-label="Buscar servicio por título"
+           class="flex-1 min-w-0 min-h-[44px] border border-slate-300 rounded px-3 py-2">
+    <button type="submit" class="min-h-[44px] bg-slate-700 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded">Buscar</button>
+    {% if q %}
+      <a href="{% url 'servicios' %}" class="inline-flex items-center min-h-[44px] px-4 py-2 text-blue-700 hover:underline">Limpiar</a>
+    {% endif %}
+  </form>
+
+  {# overflow-x-auto: en pantallas angostas la tabla se desplaza sola sin romper la página #}
+  <div class="overflow-x-auto">
+    <table class="w-full bg-white border border-slate-200 rounded-lg overflow-hidden">
+      <thead class="bg-slate-100">
+        <tr>
+          <th scope="col" class="text-left px-4 py-2">Servicio</th>
+          <th scope="col" class="text-left px-4 py-2">Categoría</th>
+          <th scope="col" class="text-left px-4 py-2">Precio</th>
+          <th scope="col" class="text-left px-4 py-2">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {# servicios ahora es una página: el for recorre solo sus 5 elementos #}
+        {% for servicio in servicios %}
+        <tr class="border-t border-slate-200">
+          <td class="px-4 py-2">{{ servicio.titulo }}</td>
+          <td class="px-4 py-2">{{ servicio.categoria }}</td>
+          <td class="px-4 py-2">${{ servicio.precio }}</td>
+          <td class="px-4 py-2 whitespace-nowrap space-x-3">
+            {# servicio.pk: la llave primaria, rellena el <int:pk> de la ruta #}
+            <a href="{% url 'editar_servicio' servicio.pk %}" aria-label="Editar {{ servicio.titulo }}" class="text-blue-700 hover:underline">Editar</a>
+            <a href="{% url 'eliminar_servicio' servicio.pk %}" aria-label="Eliminar {{ servicio.titulo }}" class="text-red-700 hover:underline">Eliminar</a>
+          </td>
+        </tr>
+        {# empty: se muestra cuando no hay servicios o la búsqueda no encontró nada #}
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-slate-600">
+            {% if q %}
+              No se encontraron servicios con "{{ q }}".
+            {% else %}
+              Todavía no hay servicios. Crea el primero con "+ Nuevo servicio".
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# paginación: solo aparece si hay más de una página #}
+  {% if servicios.paginator.num_pages > 1 %}
+  <nav aria-label="Paginación de servicios" class="flex items-center justify-between gap-3 mt-4">
+    {# q en el enlace: conserva la búsqueda al cambiar de página #}
+    {% if servicios.has_previous %}
+      <a href="?page={{ servicios.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="inline-flex items-center min-h-[44px] px-4 py-2 border border-slate-300 rounded hover:bg-slate-100">&larr; Anterior</a>
+    {% else %}
+      <span class="inline-flex items-center min-h-[44px] px-4 py-2 text-slate-400" aria-disabled="true">&larr; Anterior</span>
+    {% endif %}
+
+    <span class="text-slate-600">Página {{ servicios.number }} de {{ servicios.paginator.num_pages }}</span>
+
+    {% if servicios.has_next %}
+      <a href="?page={{ servicios.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="inline-flex items-center min-h-[44px] px-4 py-2 border border-slate-300 rounded hover:bg-slate-100">Siguiente &rarr;</a>
+    {% else %}
+      <span class="inline-flex items-center min-h-[44px] px-4 py-2 text-slate-400" aria-disabled="true">Siguiente &rarr;</span>
+    {% endif %}
+  </nav>
+  {% endif %}
 {% endblock %}
