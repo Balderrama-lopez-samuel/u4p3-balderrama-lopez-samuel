@@ -11,6 +11,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 # connection: objeto de Django que expone la configuración de la base de datos activa
 from django.db import connection
+# Paginator: parte una lista larga en páginas de N elementos
+from django.core.paginator import Paginator
 from .models import Servicio
 from .forms import ServicioForm
 
@@ -30,9 +32,19 @@ def inicio(request):
 @login_required
 def servicios(request):
     # filter(propietario=request.user): solo los servicios del usuario logueado
-    lista_servicios = Servicio.objects.filter(propietario=request.user)
-    # se la pasamos a la plantilla con la clave 'servicios'
-    return render(request, 'core/servicios.html', {'servicios': lista_servicios})
+    # order_by: el Paginator necesita un orden fijo (los más nuevos primero)
+    lista_servicios = Servicio.objects.filter(propietario=request.user).order_by('-creado_en')
+    # q: lo que el usuario escribió en el buscador (?q=...), sin espacios sobrantes
+    q = request.GET.get('q', '').strip()
+    if q:
+        # titulo__icontains: el título contiene el texto, sin importar mayúsculas
+        lista_servicios = lista_servicios.filter(titulo__icontains=q)
+    # Paginator(lista, 5): páginas de 5 servicios
+    paginador = Paginator(lista_servicios, 5)
+    # get_page: si ?page no existe o es inválido (ej. 99), devuelve una página válida
+    pagina = paginador.get_page(request.GET.get('page'))
+    contexto = {'servicios': pagina, 'q': q}
+    return render(request, 'core/servicios.html', contexto)
 
 # crear_servicio: la "C" de CRUD
 @login_required
