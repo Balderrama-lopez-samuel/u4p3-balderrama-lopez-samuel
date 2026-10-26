@@ -1,39 +1,50 @@
-# Proyecto Django — Balderrama López Samuel
+<!-- título del repo: cambia por tus nombres reales -->
+# U4S8 — Balderrama López Samuel
 
-Proyecto Django conectado a MySQL en Aiven y desplegado en Render.
+<!-- sección con la URL pública de Render -->
+## Demo en vivo (producción)
+<!-- tu dirección real de Render de esta práctica -->
+https://u4s8-balderrama-lopez-samuel.onrender.com
 
-## Semana 5 (Unidad 3): CRUD completo con ModelForms
-Pantallas propias para crear, listar, editar y eliminar servicios sin entrar a `/admin`:
-- `ServicioForm` (ModelForm) en `core/forms.py`, con validación personalizada `clean_precio` (el precio debe ser mayor a 0).
-- Vistas `crear_servicio`, `editar_servicio` y `eliminar_servicio` protegidas con `@login_required`; el propietario se asigna con `request.user`.
-- Plantillas `base.html`, `servicio_form.html` (crear y editar) y `servicio_confirm_delete.html` (confirmación antes de borrar).
-- Mientras llega el login propio (Semana 6), el inicio de sesión usa `/admin/login/`.
+- Servicios: https://u4s8-balderrama-lopez-samuel.onrender.com/servicios/
+- Panel de administración: https://u4s8-balderrama-lopez-samuel.onrender.com/admin/
 
-## Semana 6 (Unidad 3): registro, login y aislamiento de datos
-- Registro con `UserCreationForm`, inicio de sesión con `AuthenticationForm` y cierre de sesión solo por POST.
-- Cada usuario ve, edita y elimina únicamente sus propios servicios (`filter(propietario=request.user)` y `get_object_or_404(..., propietario=request.user)`).
+<!-- sección que explica el proyecto a quien lo visite -->
+## Qué hace este proyecto
+<!-- reemplaza el texto entre corchetes por tu descripción -->
+Es una vitrina de servicios hecha con Django: cada persona se registra, inicia sesión y administra su propio catálogo de servicios (título, descripción, precio y categoría) desde pantallas propias, sin entrar al panel `/admin`. Puede crear, listar, editar y eliminar sus servicios, con validación en el formulario (el precio debe ser mayor a 0) y confirmación antes de borrar.
 
-## Semana 7 (Unidad 4): pulido funcional y UX
-- **Paginación:** `/servicios/` muestra 5 servicios por página con `Paginator` y `get_page()`, que además evita errores con páginas inválidas (`?page=99`, `?page=abc`).
-- **Búsqueda:** formulario GET que filtra por título con `titulo__icontains` (sin distinguir mayúsculas); los controles Anterior/Siguiente conservan el parámetro `q`.
-- **Estado vacío:** `{% empty %}` muestra un mensaje distinto si el usuario aún no tiene servicios o si la búsqueda no encontró resultados.
-- **Accesibilidad y responsividad:** `label` y `aria-label` en el buscador y en los enlaces Editar/Eliminar, `nav` con `aria-label` en la paginación, botones de al menos 44 px de alto y tabla dentro de `overflow-x-auto` para pantallas angostas.
-- Sin cambios en el modelo, por lo que no se generaron migraciones nuevas.
+El listado de `/servicios/` está paginado (5 por página), tiene un buscador por título que no distingue mayúsculas y muestra mensajes claros cuando todavía no hay servicios o la búsqueda no encuentra resultados. La interfaz está construida con Tailwind CSS, es responsiva y cuida la accesibilidad (etiquetas, `aria-label` y botones de al menos 44 px). Los datos viven en MySQL (Aiven) y el sitio está publicado en Render con HTTPS y `DEBUG=False`.
 
-### Pruebas en producción
-| Prueba | Resultado |
-|---|---|
-| 9 servicios: página 1 con 5 y página 2 con 4 | ✅ |
-| Búsqueda `clases` / `CLASES` → 3 resultados | ✅ |
-| Búsqueda `zzzz` → mensaje "No se encontraron servicios" | ✅ |
-| `?page=99` → última página, `?page=abc` → página 1 | ✅ |
-| Otro usuario no ve los servicios ajenos y recibe 404 al abrir `/servicios/<pk>/editar/` de otro | ✅ |
+<!-- sección con las tecnologías usadas -->
+## Stack técnico
+<!-- las 4 herramientas del curso -->
+Django + MySQL (Aiven) + Tailwind CSS + Render
 
-## Producción
-https://u4s7-balderrama-lopez-samuel.onrender.com
+<!-- sección con la prueba de seguridad de la Semana 6 -->
+## Cómo se prueba el aislamiento por usuario
+<!-- pega aquí la explicación que escribiste en el README de la Semana 6 -->
+Cada servicio tiene un `propietario` (`ForeignKey` a `User`) que se asigna con `request.user` al crearlo. Las vistas están protegidas con `@login_required` y solo trabajan con los servicios del usuario en sesión:
 
-- Servicios: https://u4s7-balderrama-lopez-samuel.onrender.com/servicios/
-- Panel de administración: https://u4s7-balderrama-lopez-samuel.onrender.com/admin/
+- El listado usa `Servicio.objects.filter(propietario=request.user)`.
+- Editar y eliminar usan `get_object_or_404(Servicio, pk=pk, propietario=request.user)`, así que un servicio ajeno responde 404.
+
+Para probarlo:
+1. Inicia sesión con el usuario A y crea un servicio; anota su número en la URL de editar (`/servicios/<pk>/editar/`).
+2. Cierra sesión, regístrate como usuario B y entra a `/servicios/`: el servicio de A no aparece.
+3. Con B, abre a mano `/servicios/<pk>/editar/` y `/servicios/<pk>/eliminar/` del servicio de A: ambas responden 404.
+4. Sin sesión, entra a `/servicios/`: redirige a `/login/`.
+
+<!-- sección con el recorrido del curso -->
+## Historial de unidades
+<!-- Unidad 1 -->
+- Unidad 1: portafolio estático con HTML5 + Tailwind
+<!-- Unidad 2 -->
+- Unidad 2: modelo Servicio migrado a MySQL, deploy dinámico en Render
+<!-- Unidad 3 -->
+- Unidad 3: CRUD completo con ModelForms + autenticación y sesiones
+<!-- Unidad 4 -->
+- Unidad 4: paginación, búsqueda, UI review y defensa final
 
 ## Rutas
 | URL | Vista | name |
@@ -58,7 +69,7 @@ https://u4s7-balderrama-lopez-samuel.onrender.com
 ## Despliegue en Render
 - **Build Command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate`
 - **Start Command:** `gunicorn miproyecto.wsgi`
-- **Variables de entorno:** `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS=u4s7-balderrama-lopez-samuel.onrender.com`, `CSRF_TRUSTED_ORIGINS=https://u4s7-balderrama-lopez-samuel.onrender.com`
+- **Variables de entorno:** `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, `SECRET_KEY`, `DEBUG=False`, `ALLOWED_HOSTS=u4s8-balderrama-lopez-samuel.onrender.com`, `CSRF_TRUSTED_ORIGINS=https://u4s8-balderrama-lopez-samuel.onrender.com`
 
 ## Evidencia
 - Semana 3 (Django + MySQL en Aiven): capturas de `migrate`, tablas en Aiven y vistas locales en la carpeta [/evidencia](evidencia).
