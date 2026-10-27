@@ -1,9 +1,9 @@
 {# extends: hereda el diseño de base.html #}
 {% extends 'core/base.html' %}
 
-{% block title %}Crear cuenta{% endblock %}
+{% block titulo %}Crear cuenta{% endblock %}
 
-{% block content %}
+{% block contenido %}
   <h1 class="text-2xl font-bold mb-6">Crear cuenta</h1>
   <form method="post" class="bg-white border border-slate-200 rounded-lg p-6">
     {# csrf_token: protege el formulario contra envíos falsificados desde otro sitio #}

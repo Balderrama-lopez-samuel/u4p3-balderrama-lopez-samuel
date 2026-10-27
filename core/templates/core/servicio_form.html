@@ -1,9 +1,9 @@
 {# extends: hereda el molde común de base.html #}
 {% extends 'core/base.html' %}
 
-{% block title %}{{ titulo_pagina }}{% endblock %}
+{% block titulo %}{{ titulo_pagina }}{% endblock %}
 
-{% block content %}
+{% block contenido %}
   {# titulo_pagina: la vista manda "Nuevo servicio" o "Editar servicio", así esta plantilla sirve para ambas #}
   <h1 class="text-2xl font-bold mb-6">{{ titulo_pagina }}</h1>
 

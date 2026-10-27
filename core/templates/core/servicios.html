@@ -1,84 +1,108 @@
-{# extends: ahora el listado también hereda de base.html #}
+{# extends: el listado usa el molde base.html (debe ser la primera etiqueta) #}
 {% extends 'core/base.html' %}
 
-{% block title %}Servicios{% endblock %}
+{# block contenido: lo que va dentro del body de base.html #}
+{% block contenido %}
+  {# h1: título de la página #}
+  <h1 class="text-2xl font-bold mb-6">Servicios</h1>
+  {# enlace a la ruta con name="crear_servicio" #}
+  <a href="{% url 'crear_servicio' %}" class="inline-block mb-4 bg-blue-600 text-white px-4 py-2 rounded-lg">+ Nuevo servicio</a>
 
-{% block content %}
-  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-    <h1 class="text-2xl font-bold">Servicios</h1>
-    {# url 'crear_servicio': arma la URL a partir del name= de la ruta, sin escribirla a mano #}
-    <a href="{% url 'crear_servicio' %}" class="inline-flex items-center min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">+ Nuevo servicio</a>
-  </div>
-
-  {# method="get": la búsqueda viaja en la URL (?q=...), así se puede compartir o recargar #}
-  <form method="get" action="{% url 'servicios' %}" role="search" class="flex flex-wrap gap-2 mb-4">
-    <label for="q" class="sr-only">Buscar servicio por título</label>
-    <input type="search" id="q" name="q" value="{{ q }}" placeholder="Buscar por título..."
-           aria-label="Buscar servicio por título"
-           class="flex-1 min-w-0 min-h-[44px] border border-slate-300 rounded px-3 py-2">
-    <button type="submit" class="min-h-[44px] bg-slate-700 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded">Buscar</button>
-    {% if q %}
-      <a href="{% url 'servicios' %}" class="inline-flex items-center min-h-[44px] px-4 py-2 text-blue-700 hover:underline">Limpiar</a>
+  {# method="GET": la búsqueda queda en la URL (?q=...) y se puede compartir o recargar #}
+  <form method="GET" class="mb-4 flex flex-wrap gap-2 items-center">
+    {# name="q": debe coincidir con request.GET.get('q') de la vista · value: conserva lo que se buscó · aria-label: nombre para lectores de pantalla #}
+    <input type="text" name="q" value="{{ query }}" placeholder="Buscar por título o categoría..." aria-label="Buscar servicios por título o categoría" class="max-w-xs">
+    {# botón que envía la búsqueda #}
+    <button type="submit" class="bg-slate-700 text-white px-3 py-2 rounded-lg">Buscar</button>
+    {# if query: el enlace "Quitar búsqueda" solo aparece si hay algo buscado #}
+    {% if query %}
+      {# enlace a /servicios/ sin ?q=, para volver a ver todo #}
+      <a href="{% url 'servicios' %}" class="text-slate-600 underline">Quitar búsqueda</a>
+    {# endif: fin del bloque condicional #}
     {% endif %}
+  {# cierra el formulario de búsqueda #}
   </form>
 
-  {# overflow-x-auto: en pantallas angostas la tabla se desplaza sola sin romper la página #}
+  {# overflow-x-auto: en celulares (~375px) la tabla se desplaza de lado en vez de romper la página #}
   <div class="overflow-x-auto">
-    <table class="w-full bg-white border border-slate-200 rounded-lg overflow-hidden">
+    {# table w-full: la tabla ocupa todo el ancho; border dibuja el contorno gris #}
+    <table class="w-full border border-slate-200 rounded-lg overflow-hidden">
+      {# thead: la fila de encabezados, con fondo gris claro #}
       <thead class="bg-slate-100">
+        {# tr: la única fila del encabezado #}
         <tr>
-          <th scope="col" class="text-left px-4 py-2">Servicio</th>
-          <th scope="col" class="text-left px-4 py-2">Categoría</th>
-          <th scope="col" class="text-left px-4 py-2">Precio</th>
-          <th scope="col" class="text-left px-4 py-2">Acciones</th>
+          {# th: encabezado de la columna del nombre #}
+          <th class="text-left px-4 py-2">Servicio</th>
+          {# th: NUEVO encabezado de la columna de la categoría #}
+          <th class="text-left px-4 py-2">Categoría</th>
+          {# th: encabezado de la columna del precio #}
+          <th class="text-left px-4 py-2">Precio</th>
+          {# th: encabezado de la columna con los enlaces Editar / Eliminar #}
+          <th class="text-left px-4 py-2">Acciones</th>
+        {# cierra la fila del encabezado #}
         </tr>
+      {# cierra el encabezado de la tabla #}
       </thead>
+      {# tbody: el cuerpo de la tabla, donde van las filas de datos #}
       <tbody>
-        {# servicios ahora es una página: el for recorre solo sus 5 elementos #}
+        {# for: repite la fila una vez por cada servicio de la página actual #}
         {% for servicio in servicios %}
+        {# tr: una fila por servicio; border-t dibuja la línea gris de arriba #}
         <tr class="border-t border-slate-200">
+          {# td: celda con el título del servicio #}
           <td class="px-4 py-2">{{ servicio.titulo }}</td>
-          <td class="px-4 py-2">{{ servicio.categoria }}</td>
+          {# td: NUEVA celda con la categoría; muestra su nombre gracias a __str__ (default si quedó vacía) #}
+          <td class="px-4 py-2">{{ servicio.categoria|default:"Sin categoría" }}</td>
+          {# td: celda con el precio; el $ es texto fijo antes del número #}
           <td class="px-4 py-2">${{ servicio.precio }}</td>
-          <td class="px-4 py-2 whitespace-nowrap space-x-3">
-            {# servicio.pk: la llave primaria, rellena el <int:pk> de la ruta #}
-            <a href="{% url 'editar_servicio' servicio.pk %}" aria-label="Editar {{ servicio.titulo }}" class="text-blue-700 hover:underline">Editar</a>
-            <a href="{% url 'eliminar_servicio' servicio.pk %}" aria-label="Eliminar {{ servicio.titulo }}" class="text-red-700 hover:underline">Eliminar</a>
+          {# td: celda de las acciones; whitespace-nowrap evita que los 2 enlaces se partan en 2 renglones #}
+          <td class="px-4 py-2 whitespace-nowrap">
+            {# url 'editar_servicio' servicio.pk: arma la dirección /servicios/<id>/editar/ #}
+            <a href="{% url 'editar_servicio' servicio.pk %}" class="text-blue-600 underline">Editar</a>
+            {# url 'eliminar_servicio' servicio.pk: arma la dirección /servicios/<id>/eliminar/ #}
+            <a href="{% url 'eliminar_servicio' servicio.pk %}" class="text-red-600 underline ml-3">Eliminar</a>
+          {# cierra la celda de las acciones #}
           </td>
+        {# cierra la fila de este servicio #}
         </tr>
-        {# empty: se muestra cuando no hay servicios o la búsqueda no encontró nada #}
+        {# empty: se dibuja SOLO si no hay ningún servicio que mostrar #}
         {% empty %}
+        {# fila única con el aviso; colspan="4" (antes 3) la estira a lo ancho de las 4 columnas #}
         <tr>
-          <td colspan="4" class="px-4 py-6 text-center text-slate-600">
-            {% if q %}
-              No se encontraron servicios con "{{ q }}".
-            {% else %}
-              Todavía no hay servicios. Crea el primero con "+ Nuevo servicio".
-            {% endif %}
-          </td>
+          {# if query: el mensaje cambia si la lista está vacía por una búsqueda o porque no hay registros #}
+          <td colspan="4" class="text-center text-slate-500 py-6">{% if query %}No hay servicios que coincidan con "{{ query }}".{% else %}Aún no tienes servicios. ¡Crea el primero!{% endif %}</td>
+        {# cierra la fila del aviso #}
         </tr>
+        {# endfor: fin de la repetición #}
         {% endfor %}
+      {# cierra el cuerpo de la tabla #}
       </tbody>
+    {# cierra la tabla #}
     </table>
+  {# cierra el contenedor con desplazamiento lateral #}
   </div>
 
-  {# paginación: solo aparece si hay más de una página #}
+  {# if num_pages > 1: los controles de página solo aparecen si hay más de una página #}
   {% if servicios.paginator.num_pages > 1 %}
-  <nav aria-label="Paginación de servicios" class="flex items-center justify-between gap-3 mt-4">
-    {# q en el enlace: conserva la búsqueda al cambiar de página #}
+  {# nav: barra de paginación; aria-label la nombra para lectores de pantalla #}
+  <nav class="mt-4 flex items-center gap-2" aria-label="Paginación">
+    {# has_previous: True si no estamos en la primera página #}
     {% if servicios.has_previous %}
-      <a href="?page={{ servicios.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="inline-flex items-center min-h-[44px] px-4 py-2 border border-slate-300 rounded hover:bg-slate-100">&larr; Anterior</a>
-    {% else %}
-      <span class="inline-flex items-center min-h-[44px] px-4 py-2 text-slate-400" aria-disabled="true">&larr; Anterior</span>
+      {# previous_page_number: la página anterior · q=…: conserva la búsqueda al cambiar de página #}
+      <a href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={{ servicios.previous_page_number }}" class="text-blue-600 underline px-2 py-2">← Anterior</a>
+    {# endif: fin del bloque "Anterior" #}
     {% endif %}
-
-    <span class="text-slate-600">Página {{ servicios.number }} de {{ servicios.paginator.num_pages }}</span>
-
+    {# number y paginator.num_pages: página actual sobre el total de páginas #}
+    <span class="text-slate-500">Página {{ servicios.number }} de {{ servicios.paginator.num_pages }}</span>
+    {# has_next: True si existe una página después de la actual #}
     {% if servicios.has_next %}
-      <a href="?page={{ servicios.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="inline-flex items-center min-h-[44px] px-4 py-2 border border-slate-300 rounded hover:bg-slate-100">Siguiente &rarr;</a>
-    {% else %}
-      <span class="inline-flex items-center min-h-[44px] px-4 py-2 text-slate-400" aria-disabled="true">Siguiente &rarr;</span>
+      {# next_page_number: la página siguiente · q=…: conserva la búsqueda al cambiar de página #}
+      <a href="?{% if query %}q={{ query|urlencode }}&{% endif %}page={{ servicios.next_page_number }}" class="text-blue-600 underline px-2 py-2">Siguiente →</a>
+    {# endif: fin del bloque "Siguiente" #}
     {% endif %}
+  {# cierra la barra de paginación #}
   </nav>
+  {# endif: fin del bloque de paginación #}
   {% endif %}
+{# endblock: fin del bloque contenido #}
 {% endblock %}
