@@ -9,3 +9,5 @@ env
 db.sqlite3
 
 staticfiles/
+# entrega_maestro/: zip con bitacora y archivos para el maestro, no se sube a GitHub
+entrega_maestro/
